@@ -20,30 +20,30 @@ taxa <- sample(letters, size = n, TRUE)
 site <- sample(paste('A', 1:nSites, sep=''), size = n, TRUE)
 
 # the date of visit is selected at random from those created earlier
-time_period <- sample(rDates, size = n, TRUE)
+survey <- sample(rDates, size = n, TRUE)
 
-df <- data.frame(taxa, site, time_period)
+df <- data.frame(taxa, site, survey)
 
 test_that("Test occDetModel", {
   
   sink(file=ifelse(Sys.info()["sysname"] == "Windows",
                    "NUL",
                    "/dev/null"))
-  results <- occDetModel(taxa = df$taxa,
+  suppressWarnings(results <- occDetModel(taxa = df$taxa,
                          write_results = FALSE,
                          site = df$site,
-                         time_period = df$time_period,
+                         survey = df$survey,
                          species_list = c('a','m','g'),
                          n_iterations = 100,
                          burnin = 10,
                          thinning = 2,
-                         seed = 111)
+                         seed = 111))
   sink()
 
   expect_identical(names(results), c('a','m','g'))
   expect_identical(names(results[[1]]),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
                      "nsites", "nvisits", "species_sites", "species_observations"))
   
 })

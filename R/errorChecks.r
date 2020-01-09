@@ -1,7 +1,8 @@
 #' @importFrom dplyr distinct
 
-errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate = NULL,
-                        endDate = NULL, Date = NULL, time_periodsDF = NULL, dist = NULL, sim = NULL,
+errorChecks <- function(taxa = NULL, site = NULL, survey = NULL, replicate = NULL, closure_period = NULL, time_period = NULL, 
+                        startDate = NULL, endDate = NULL, Date = NULL, 
+                        time_periodsDF = NULL, dist = NULL, sim = NULL,
                         dist_sub = NULL, sim_sub = NULL, minSite = NULL, useIterations = NULL,
                         iterations = NULL, overdispersion = NULL, verbose = NULL,
                         list_length = NULL, site_effect = NULL, family = NULL,
@@ -14,6 +15,9 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
   # Create a list of all non-null arguements that should be of equal length
   valid_argumentsTEMP <- list(taxa=taxa,
                           site=site,
+                          survey=survey,
+                          closure_period=closure_period,
+                          replicate=replicate,
                           time_period=time_period,
                           startDate=startDate,
                           endDate=endDate)
@@ -28,6 +32,21 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
     }
   }
   
+  if(!is.null(taxa) & !is.null(site) & !is.null(survey)){
+
+    if(!is.null(replicate)){
+      df <- data.frame(taxa, site, survey, replicate)
+    } else {
+      df <- data.frame(taxa, site, survey)
+    }
+
+    NR1 <- nrow(df)
+    NR2 <- nrow(distinct(df))
+    
+    if(NR1 != NR2) warning(paste(NR1 - NR2, 'out of', NR1, 'observations will be removed as duplicates'))
+    
+  }
+  
   if(!is.null(taxa) & !is.null(site) & !is.null(time_period)){
     
     df <- data.frame(taxa, site, time_period)
@@ -38,21 +57,31 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
     
   }
   
+  ###### Make sure there are no NAs
+  
   ### Checks for taxa ###
   if(!is.null(taxa)){    
-    # Make sure there are no NAs
     if(!all(!is.na(taxa))) stop('taxa must not contain NAs')    
   }
   
   ### Checks for site ###
   if(!is.null(site)){    
-    # Make sure there are no NAs
-    if(!all(!is.na(site))) stop('site must not contain NAs')    
+    if(!all(!is.na(site))) stop('site must not contain NAs')
+    if(!all(site != '')) stop("site must not contain empty values (i.e. '')")
+  }
+  
+  ### Checks for closure period ###
+  if(!is.null(closure_period)){    
+    if(!all(!is.na(closure_period))) stop('closure_period must not contain NAs')    
+  }
+  
+  ### Checks for replicate ###
+  if(!is.null(replicate)){    
+    if(!all(!is.na(replicate))) stop('replicate must not contain NAs')    
   }
   
   ### Checks for time_period ###
   if(!is.null(time_period)){    
-    # Make sure there are no NAs
     if(!all(!is.na(time_period))) stop('time_period must not contain NAs')    
   }
   
@@ -99,7 +128,7 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
     
     if(class(dist) != 'data.frame') stop('dist must be a data.frame')
     if(ncol(dist) != 3) stop('dist must have three columns') 
-    if(!class(dist[,3]) %in% c('numeric', 'interger')) stop('the value column in dist must be an integer or numeric')
+    if(!class(dist[,3]) %in% c('numeric', 'integer')) stop('the value column in dist must be an integer or numeric')
     
     # Check distance table contains all combinations of sites
     sites <- unique(c(as.character(dist[,1]), as.character(dist[,2])))
@@ -115,15 +144,15 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
   if(!is.null(sim)){
     
     if(class(sim) != 'data.frame') stop('sim must be a data.frame')
-    if(!all(lapply(sim[,2:ncol(sim)], class) %in% c('numeric', 'interger'))) stop('the values in sim must be integers or numeric')
+    if(!all(lapply(sim[,2:ncol(sim)], class) %in% c('numeric', 'integer'))) stop('the values in sim must be integers or numeric')
         
   }
   
   ### Checks for sim_sub and dist_sub ###
   if(!is.null(sim_sub) & !is.null(dist_sub)){
     
-    if(!class(dist_sub) %in% c('numeric', 'interger')) stop('dist_sub must be integer or numeric')
-    if(!class(sim_sub) %in% c('numeric', 'interger')) stop('sim_sub must be integer or numeric')
+    if(!class(dist_sub) %in% c('numeric', 'integer')) stop('dist_sub must be integer or numeric')
+    if(!class(sim_sub) %in% c('numeric', 'integer')) stop('sim_sub must be integer or numeric')
     if(dist_sub <= sim_sub) stop("'dist_sub' cannot be smaller than or equal to 'sim_sub'")
     
   }
@@ -131,7 +160,7 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
   ### checks for minSite ###
   if(!is.null(minSite)){
   
-    if(!class(minSite) %in% c('numeric', 'interger')) stop('minSite must be numeric or interger')
+    if(!class(minSite) %in% c('numeric', 'integer')) stop('minSite must be numeric or integer')
   
   }
   
@@ -145,7 +174,7 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
   ### checks for iterations ###
   if(!is.null(iterations)){
    
-    if(!class(iterations) %in% c('numeric', 'interger')) stop('iterations must be numeric or interger')
+    if(!class(iterations) %in% c('numeric', 'integer')) stop('iterations must be numeric or integer')
         
   }
   
@@ -210,14 +239,14 @@ errorChecks <- function(taxa = NULL, site = NULL, time_period = NULL, startDate 
   
   ### check BUGS parameters ###
   if(!is.null(c(n_iterations, burnin, thinning, n_chains))){
-    
-    if(burnin > n_iterations) stop('Burn in (burnin) must not be larger that the number of iteration (n_iterations)')
-    if(thinning > n_iterations) stop('thinning must not be larger that the number of iteration (n_iterations)')
-   
     if(!is.numeric(n_iterations)) stop('n_iterations should be numeric')
     if(!is.numeric(burnin)) stop('burnin should be numeric')
     if(!is.numeric(thinning)) stop('thinning should be numeric')
     if(!is.numeric(n_chains)) stop('n_chains should be numeric')
+    
+    
+    if(burnin > n_iterations) stop('Burn in (burnin) must not be larger that the number of iteration (n_iterations)')
+    if(thinning > n_iterations) stop('thinning must not be larger that the number of iteration (n_iterations)')
     
   }
   

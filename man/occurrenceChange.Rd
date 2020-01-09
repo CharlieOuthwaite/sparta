@@ -21,7 +21,7 @@ is annual growth rate.  See details for options.}
 Region names must match those in the model output.}
 }
 \value{
-A list giving the mean, credible intervals and raw data from the
+A list giving the mean, median, credible intervals and raw data from the
 estimations.
 }
 \description{
@@ -37,13 +37,13 @@ calculate the mean estimate and the 95% credibale intervals.
 There are four options to choose from: difference, percentdif, growthrate and
 lineargrowth.
 
-difference calculates the simple difference between the first and last year.
+\code{difference} calculates the simple difference between the first and last year.
 
-percentdif calculates the percentage difference between the first and last year.
+\code{percentdif} calculates the percentage difference between the first and last year.
 
-growthrate calculates the annual growth rate across years.
+\code{growthrate} calculates the annual growth rate across years.
 
-lineargrowth calculates the linear growth rate from a linear model.
+\code{lineargrowth} calculates the linear growth rate from a linear model.
 }
 \examples{
 \dontrun{
@@ -67,12 +67,12 @@ taxa <- sample(letters, size = n, TRUE)
 site <- sample(paste('A', 1:nSites, sep=''), size = n, TRUE)
 
 # the date of visit is selected at random from those created earlier
-time_period <- sample(rDates, size = n, TRUE)
+survey <- sample(rDates, size = n, TRUE)
 
 # run the model with these data for one species
 results <- occDetModel(taxa = taxa,
                        site = site,
-                       time_period = time_period,
+                       survey = survey,
                        species_list = c('a','m','g'),
                        write_results = FALSE,
                        n_iterations = 1000,

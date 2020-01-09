@@ -4,7 +4,8 @@
 \alias{dataDiagnostics}
 \title{Data Diagnostics}
 \usage{
-dataDiagnostics(taxa, site, time_period, plot = TRUE, progress_bar = TRUE)
+dataDiagnostics(taxa, site, time_period, plot = TRUE,
+  progress_bar = TRUE)
 }
 \arguments{
 \item{taxa}{A character vector of taxon names, as long as the number of observations.}
@@ -34,7 +35,7 @@ if there is a significant trend.
 
 ### Diagnostics functions ###
 # Create data
-n <- 2000 #size of dataset
+n <- 2000 # size of dataset
 nyr <- 20 # number of years in data
 nSamples <- 200 # set number of dates
 useDates <- TRUE

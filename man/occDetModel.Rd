@@ -4,7 +4,7 @@
 \alias{occDetModel}
 \title{Occupancy detection models}
 \usage{
-occDetModel(taxa, site, time_period, species_list = unique(taxa),
+occDetModel(taxa, site, survey, species_list = unique(taxa),
   write_results = TRUE, output_dir = getwd(), nyr = 2,
   n_iterations = 5000, burnin = 1500, thinning = 3, n_chains = 3,
   modeltype = "sparta", regional_codes = NULL, region_aggs = NULL,
@@ -17,8 +17,8 @@ occDetModel(taxa, site, time_period, species_list = unique(taxa),
 
 \item{site}{A character vector of site names, as long as the number of observations.}
 
-\item{time_period}{A numeric vector of user defined time periods, or a date vector,
-as long as the number of observations.}
+\item{survey}{A  vector as long as the number of observations. 
+This must be a Date if includeJDay = \code{TRUE}}
 
 \item{species_list}{A character vector of taxa names for which models should be run. This is
 optional and by default models will be run for all taxa}
@@ -121,7 +121,7 @@ combination is not a good idea. Here are the model elements available:
  \item{\code{"catlistlength"}}{ - This specifies that list length should be considered as a catagorical variable. There are 3 classes, lists of length 1, 2-3, and 4 and over. If none of the list length options are specifed 'contlistlength' is used}
  \item{\code{"contlistlength"}}{ - This specifies that list length should be considered as a continious variable. If none of the list length options are specifed 'contlistlength' is used}
  \item{\code{"nolistlength"}}{ - This specifies that no list length should be used. If none of the list length options are specifed 'contlistlength' is used}
- \item{\code{"jul_date"}}{ - This adds Julian date to the model as a polynomial centered on the middle of the year.}
+ \item{\code{"jul_date"}}{ - This adds Julian date to the model as a normal distribution with its mean and standard deviation as monitered parameters.}
  \item{\code{"intercept"}}{ - No longer available.  Includes an intercept term in the state and observation model.  By including intercept terms, the occupancy and detection probabilities in each year are centred on an overall mean level.}
  \item{\code{"centering"}}{ - No longer available.  Includes hierarchical centering of the model parameters.   Centring does not change the model explicitly but writes it in a way that allows parameter estimates to be updated simultaneously.}
 }
@@ -150,13 +150,13 @@ taxa <- sample(letters, size = n, TRUE)
 site <- sample(paste('A', 1:nSites, sep=''), size = n, TRUE)
 
 # the date of visit is selected at random from those created earlier
-time_period <- sample(rDates, size = n, TRUE)
+survey <- sample(rDates, size = n, TRUE)
 
 # run the model with these data for one species
 # using defaults
 results <- occDetModel(taxa = taxa,
                        site = site,
-                       time_period = time_period,
+                       survey = survey,
                        species_list = 'a',
                        write_results = FALSE,
                        n_iterations = 1000,
@@ -166,7 +166,7 @@ results <- occDetModel(taxa = taxa,
 # run with a different model type
 results <- occDetModel(taxa = taxa,
                        site = site,
-                       time_period = time_period,
+                       survey = survey,
                        species_list = 'a',
                        write_results = FALSE,
                        n_iterations = 1000,
@@ -185,7 +185,7 @@ regions <- data.frame(site = unique(site),
  
 results <- occDetModel(taxa = taxa,
                        site = site,
-                       time_period = time_period,
+                       survey = survey,
                        species_list = 'a',
                        write_results = FALSE,
                        n_iterations = 1000,
@@ -200,7 +200,11 @@ results <- occDetModel(taxa = taxa,
 \references{
 Isaac, N.J.B., van Strien, A.J., August, T.A., de Zeeuw, M.P. and Roy, D.B. (2014).
             Statistics for citizen science: extracting signals of change from noisy ecological data.
-            Methods in Ecology and Evolution, 5 (10), 1052-1060.
+            \emph{Methods in Ecology and Evolution}, 5: 1052-1060.
+
+Outhwaite, C.L., Chandler, R.E., Powney, G.D., Collen, B., Gregory, R.D. & Isaac, N.J.B. (2018).
+            Prior specification in Bayesian occupancy modelling improves analysis of species occurrence data. 
+            \emph{Ecological Indicators}, 93: 333-343.
 
 Roy, H.E., Adriaens, T., Isaac, N.J.B. et al. (2012) Invasive alien predator
             causes rapid declines of native European ladybirds. Diversity & Distributions,

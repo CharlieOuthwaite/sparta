@@ -20,7 +20,7 @@ taxa <- sample(letters, size = n, TRUE)
 site <- sample(paste('A', 1:nSites, sep=''), size = n, TRUE)
 
 # the date of visit is selected at random from those created earlier
-time_period <- sample(rDates, size = n, TRUE)
+survey <- sample(rDates, size = n, TRUE)
 
 # set up regions for some testing
 regions <- data.frame(site = unique(site),
@@ -30,17 +30,30 @@ regions <- data.frame(site = unique(site),
 
 # format data
 suppressWarnings({visitData <- formatOccData(taxa = taxa, site = site,
-                                             time_period = time_period)})
+                                             survey = survey)})
 
 ## additional data for testing missing years
-# remove one year 
-time_period_missing <- sub("2018-", "2019-", time_period)
+# remove one years 
+time_period_missing <- sub("2018-", "2019-", survey)
 time_period_missing <- as.Date(time_period_missing)
+
+# remove a second year
+time_period_missing2 <- sub("2017-", "2019-", time_period_missing)
+time_period_missing2 <- as.Date(time_period_missing2)
 
 # format data
 suppressWarnings({visitData_missing <- formatOccData(taxa = taxa, site = site,
-                                                     time_period = time_period_missing)})
+                                                     survey = time_period_missing)})
+suppressWarnings({visitData_missing2 <- formatOccData(taxa = taxa, site = site,
+                                                     survey = time_period_missing2)})
 
+# additional data for testing species lost after nyr filter
+taxa_filterError <- c(taxa,"aa")
+site_filterError <- c(site,"B1")
+survey_filterError <- c(survey,sample(rDates, size = 1, TRUE)) 
+
+suppressWarnings({visitData_filterError <- formatOccData(taxa = taxa_filterError, site = site_filterError,
+                                                      survey = survey_filterError)})
 
 test_that("Test occDetFunc errors", {
   
@@ -69,8 +82,18 @@ test_that("Test occDetFunc errors", {
                                     spp_vis = visitData_missing$spp_vis,
                                     write_results = FALSE,
                                     seed = 111),
-              'It looks like you have years with no data. This will crash BUGS')
+              'There are no visits in year 2018. This will crash BUGS')
+
+ expect_error(results <- occDetFunc(taxa_name = 'a',
+                                    n_iterations = 50,
+                                    burnin = 15, 
+                                    occDetdata = visitData_missing2$occDetdata,
+                                    spp_vis = visitData_missing2$spp_vis,
+                                    write_results = FALSE,
+                                    seed = 111),
+              'There are 2 years with no visits, including 2017. This will crash BUGS')
  
+  
  expect_error(results <- occDetFunc(taxa_name = 'a',
                                     n_iterations = 50,
                                     burnin = 15, 
@@ -111,8 +134,8 @@ test_that("Test occDetFunc with defaults", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
 })
 
@@ -134,8 +157,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
 
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -149,8 +172,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -163,8 +186,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -178,8 +201,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   
   results <- occDetFunc(taxa_name = 'a',
@@ -194,8 +217,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -209,8 +232,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -224,8 +247,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -238,8 +261,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -253,8 +276,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   
   results <- occDetFunc(taxa_name = 'a',
@@ -269,8 +292,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -284,8 +307,8 @@ test_that("Test occDetFunc with model types", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   
   sink()
   
@@ -298,7 +321,7 @@ test_that("Test occDetFunc with julian date", {
                    "/dev/null"))
   
   suppressWarnings({visitData <- formatOccData(taxa = taxa, site = site,
-                                               time_period = time_period,
+                                               survey = survey,
                                                includeJDay = TRUE)})
   
   results <- occDetFunc(taxa_name = 'a',
@@ -313,10 +336,11 @@ test_that("Test occDetFunc with julian date", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   expect_true('beta1' %in% row.names(results$BUGSoutput$summary))
   expect_true('beta2' %in% row.names(results$BUGSoutput$summary))
+  expect_true('beta3' %in% row.names(results$BUGSoutput$summary))
   
   results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
@@ -330,10 +354,11 @@ test_that("Test occDetFunc with julian date", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   expect_true('beta1' %in% row.names(results$BUGSoutput$summary))
   expect_true('beta2' %in% row.names(results$BUGSoutput$summary))
+  expect_true('beta3' %in% row.names(results$BUGSoutput$summary))
   
   sink()
   
@@ -346,7 +371,7 @@ test_that("Test occDetFunc with catagorical list length", {
                    "/dev/null"))
   
   suppressWarnings({visitData <- formatOccData(taxa = taxa, site = site,
-                                               time_period = time_period,
+                                               survey = survey,
                                                includeJDay = TRUE)})
   
   results <- occDetFunc(taxa_name = 'a',
@@ -361,8 +386,8 @@ test_that("Test occDetFunc with catagorical list length", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   expect_true('dtype2.p' %in% row.names(results$BUGSoutput$summary))
   expect_true('dtype3.p' %in% row.names(results$BUGSoutput$summary))
   
@@ -378,8 +403,8 @@ test_that("Test occDetFunc with catagorical list length", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
-                     "nsites", "nvisits", "species_sites", "species_observations"))
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
+                     "nsites", "nvisits", "species_sites", "species_observations", "bugs_data"))
   expect_true('dtype2.p' %in% row.names(results$BUGSoutput$summary))
   expect_true('dtype3.p' %in% row.names(results$BUGSoutput$summary))
   
@@ -408,9 +433,9 @@ test_that("Test occDetFunc using regions and region aggregates", {
   expect_identical(results$n.iter, 50)
   expect_identical(names(results),
                    c("model", "BUGSoutput", "parameters.to.save", "model.file", 
-                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year",
+                     "n.iter", "DIC", "SPP_NAME", "min_year", "max_year", "sites_included",
                      "nsites", "nvisits", "species_sites", "species_observations",
-                     "regions", "region_aggs"))
+                     "regions", "region_aggs", "bugs_data"))
   expect_identical(results$regions,
                    c("region1", "region2", "region3"))
   expect_identical(names(results$region_aggs), "agg1")
@@ -423,9 +448,10 @@ test_that("Test occDetFunc using regions and region aggregates", {
   expect_true("psi.fs.r_region3[1]" %in% RNs)
   expect_true("psi.fs.r_agg1[1]" %in% RNs)
   
-  regions$region4 <- 0
-  
   # test with a region with no data
+  regionsempty<-regions
+  regionsempty$region4 <- 0
+  
   expect_warning(results <- occDetFunc(taxa_name = 'a',
                         n_iterations = 50,
                         burnin = 15, 
@@ -434,10 +460,131 @@ test_that("Test occDetFunc using regions and region aggregates", {
                         write_results = FALSE,
                         seed = 111,
                         modeltype = c("ranwalk", "halfcauchy"),
-                        regional_codes = regions,
+                        regional_codes = regionsempty,
                         region_aggs = list(agg1 = c('region1', 'region2'))),
                  'The following regions have no data and')
-
+  
+  # test with regional_codes not as a dataframe
+  expect_error(results <- occDetFunc(taxa_name = 'a',
+                                       n_iterations = 50,
+                                       burnin = 15, 
+                                       occDetdata = visitData$occDetdata,
+                                       spp_vis = visitData$spp_vis,
+                                       write_results = FALSE,
+                                       seed = 111,
+                                       modeltype = c("ranwalk", "halfcauchy"),
+                                       regional_codes = as.matrix(regions),
+                                       region_aggs = list(agg1 = c('region1', 'region2'))),
+                 'regional_codes should be a data.frame')
+  
+  # test with NAs in regional_codes
+  regionsNA <- regions
+  regionsNA[1,3] <- NA
+  
+  expect_warning(results <- occDetFunc(taxa_name = 'a',
+                                     n_iterations = 50,
+                                     burnin = 15, 
+                                     occDetdata = visitData$occDetdata,
+                                     spp_vis = visitData$spp_vis,
+                                     write_results = FALSE,
+                                     seed = 111,
+                                     modeltype = c("ranwalk", "halfcauchy"),
+                                     regional_codes = regionsNA,
+                                     region_aggs = list(agg1 = c('region1', 'region2'))),
+               "NAs are present in regional_codes, these will be replaced with 0's")
+  
+  # test with sites in multiple regions
+  regionsmulti <- regions
+  regionsmulti[1,3] <- 1
+  
+  expect_error(results <- occDetFunc(taxa_name = 'a',
+                                       n_iterations = 50,
+                                       burnin = 15, 
+                                       occDetdata = visitData$occDetdata,
+                                       spp_vis = visitData$spp_vis,
+                                       write_results = FALSE,
+                                       seed = 111,
+                                       modeltype = c("ranwalk", "halfcauchy"),
+                                       regional_codes = regionsmulti,
+                                       region_aggs = list(agg1 = c('region1', 'region2'))),
+                  '1 sites are assigned to more than one region in regional_codes')
+  
+  # test with sites in no regions
+  regionsmulti <- regions
+  regionsmulti[1,2] <- 0
+  
+  expect_error(results <- occDetFunc(taxa_name = 'a',
+                                     n_iterations = 50,
+                                     burnin = 15, 
+                                     occDetdata = visitData$occDetdata,
+                                     spp_vis = visitData$spp_vis,
+                                     write_results = FALSE,
+                                     seed = 111,
+                                     modeltype = c("ranwalk", "halfcauchy"),
+                                     regional_codes = regionsmulti,
+                                     region_aggs = list(agg1 = c('region1', 'region2'))),
+               'sites are not assigned to a region in regional_codes')
+  
+  # test for sites in occurence data but not regions
+  regionsmissing <- regions[2:50,]
+  
+  expect_warning(results <- occDetFunc(taxa_name = 'a',
+                                     n_iterations = 50,
+                                     burnin = 15, 
+                                     occDetdata = visitData$occDetdata,
+                                     spp_vis = visitData$spp_vis,
+                                     write_results = FALSE,
+                                     seed = 111,
+                                     modeltype = c("ranwalk", "halfcauchy"),
+                                     regional_codes = regionsmissing,
+                                     region_aggs = list(agg1 = c('region1', 'region2'))),
+               '1 sites are in occurrence data but not in regional data and will be removed')
+  
+  # test for regional aggregate containing unknown region
+  expect_error(results <- occDetFunc(taxa_name = 'a',
+                                       n_iterations = 50,
+                                       burnin = 15, 
+                                       occDetdata = visitData$occDetdata,
+                                       spp_vis = visitData$spp_vis,
+                                       write_results = FALSE,
+                                       seed = 111,
+                                       modeltype = c("ranwalk", "halfcauchy"),
+                                       regional_codes = regions,
+                                       region_aggs = list(agg1 = c('region1', 'region2','region4'))),
+               'Aggregate members [region4] not in regional_codes column names [region1, region2, region3]',fixed=TRUE)
+  
+  # test for regional aggregate without regional_codes
+  expect_error(results <- occDetFunc(taxa_name = 'a',
+                                     n_iterations = 50,
+                                     burnin = 15, 
+                                     occDetdata = visitData$occDetdata,
+                                     spp_vis = visitData$spp_vis,
+                                     write_results = FALSE,
+                                     seed = 111,
+                                     modeltype = c("ranwalk", "halfcauchy"),
+                                     regional_codes = NULL,
+                                     region_aggs = list(agg1 = c('region1', 'region2'))),
+               'Cannot use regional aggregates if regional_codes is not supplied')
+  
   sink()
   
 }) 
+
+test_that("Test occDetFunc with empty species post nyr filter", {
+  
+  sink(file=ifelse(Sys.info()["sysname"] == "Windows",
+                   "NUL",
+                   "/dev/null"))
+  
+  expect_error(results <- occDetFunc(taxa_name = 'aa',
+                                     n_iterations = 50,
+                                     burnin = 15, 
+                                     occDetdata = visitData_filterError$occDetdata,
+                                     spp_vis = visitData_filterError$spp_vis,
+                                     write_results = FALSE,
+                                     seed = 111,
+                                     modeltype = c("ranwalk", "halfcauchy")),'aa has no observations after site filtering. To continue to model this species please decrease the nyr parameter')
+ 
+  sink()
+  
+})

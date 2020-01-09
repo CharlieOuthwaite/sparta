@@ -1,13 +1,15 @@
 Package: sparta
 Type: Package
 Title: Trend Analysis for Unstructured Data
-Version: 0.1.40
-Date: 2018-03-01
+Version: 0.2.07
+Date: 2019-10-03
 Authors@R: c(person("Tom", "August", role = c("aut", "cre"), email = "tomaug@ceh.ac.uk"),
              person("Gary", "Powney", role = c("aut")),
              person("Charlie", "Outhwaite", role = c("aut")),
              person("Colin", "Harrower", role = c("aut")),
              person("Mark", "Hill", role = c("aut")),
+             person("Jack", "Hatfield", role = c("aut")),
+             person("Francesca", "Mancini", role = c("aut")),
              person("Nick", "Isaac", role = c("aut")))
 Maintainer: Tom August <tomaug@ceh.ac.uk>
 Description: Methods used to analyse trends in unstructured
@@ -26,11 +28,13 @@ Imports:
     gdata,
     R2jags,
     LearnBayes,
-    rmarkdown
+    rmarkdown,
+    boot
 Suggests:
     testthat (>= 0.8.0),
     roxygen2,
     knitr
 VignetteBuilder: knitr
 LazyData: TRUE
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
+Encoding: UTF-8

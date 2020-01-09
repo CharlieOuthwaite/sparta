@@ -4,13 +4,13 @@
 \alias{occDetFunc}
 \title{Occupancy detection Function}
 \usage{
-occDetFunc(taxa_name, occDetdata, spp_vis, n_iterations = 5000, nyr = 2,
-  burnin = 1500, thinning = 3, n_chains = 3, write_results = TRUE,
-  output_dir = getwd(), modeltype = "sparta", max_year = NULL,
-  seed = NULL, model.function = NULL, regional_codes = NULL,
-  region_aggs = NULL, additional.parameters = NULL,
-  additional.BUGS.elements = NULL, additional.init.values = NULL,
-  return_data = FALSE)
+occDetFunc(taxa_name, occDetdata, spp_vis, n_iterations = 5000,
+  nyr = 2, burnin = 1500, thinning = 3, n_chains = 3,
+  write_results = TRUE, output_dir = getwd(), modeltype = "sparta",
+  max_year = NULL, seed = NULL, model.function = NULL,
+  regional_codes = NULL, region_aggs = NULL,
+  additional.parameters = NULL, additional.BUGS.elements = NULL,
+  additional.init.values = NULL, return_data = TRUE)
 }
 \arguments{
 \item{taxa_name}{A character giving the name of the species to be modelled.}
@@ -21,7 +21,7 @@ occDetFunc(taxa_name, occDetdata, spp_vis, n_iterations = 5000, nyr = 2,
 
 \item{n_iterations}{numeric, An MCMC parameter - The number of interations}
 
-\item{nyr}{numeric, the minimum number of years on which a site must have records for it
+\item{nyr}{numeric, the minimum number of periods on which a site must have records for it
 to be included in the models. Defaults to 2}
 
 \item{burnin}{numeric, An MCMC parameter - The length of the burn in}
@@ -73,7 +73,36 @@ be added to the defaults.}
 \item{return_data}{Logical, if \code{TRUE} (default) the bugs data object is returned with the data}
 }
 \value{
-A list including the model, bugs model output, the path of the model file used and information on the number of iterations, first year, last year, etc.
+A list including the model, JAGS model output, the path of the model file used and information on the number of iterations, first year, last year, etc.
+Key aspects of the model output include:
+\itemize{
+ \item{\code{"out$model"}}{ - The model used as provided to JAGS. Also contained is a list of fully observed variables. These are those listed in the BUGS data.}
+ \item{\code{"out$BUGSoutput$n.chains"}}{ - The number of Markov chains ran in the MCMC simulations.}
+ \item{\code{"out$BUGSoutput$n.iter"}}{ - The total number of iterations per chain.}
+ \item{\code{"out$BUGSoutput$n.burnin"}}{ - The number of interations discarded from the start as a burn-in period.}
+ \item{\code{"out$BUGSoutput$n.thin"}}{ - The thinning rate used. For example a thinning rate of 3 retains only every third iteration. This is used to reduce autocorrelation.}
+ \item{\code{"out$BUGSoutput$n.keep"}}{ - The number of iterations kept per chain. This is the total number of iterations minus the burn-in then divided by the thinning rate.}
+ \item{\code{"out$BUGSoutput$n.sims"}}{ - The total number of iterations kept.}
+ \item{\code{"out$BUGSoutput$summary"}}{ - A summary table of the monitored parameter. The posterior distribution for each parameter is summaried with the mean, standard deviation, various credible intervals, a formal convergence metric (Rhat), and a measure of effective sample size (n.eff).}
+ \item{\code{"out$BUGSoutput$mean"}}{ - the mean values for all monitored parameters}
+ \item{\code{"out$BUGSoutput$sd"}}{ - the standard deviation values for all monitored parameters}
+ \item{\code{"out$BUGSoutput$median"}}{ - the median values for all monitored parameters}
+ \item{\code{"out$parameters.to.save"}}{ - The names of all monitored parameters.}
+ \item{\code{"out$BUGSoutput$model.file"}}{ - The user provided or temporary generated model file detailing the occupancy model.}
+ \item{\code{"out$n.iter"}}{ - The total number of interations per chain.}
+ \item{\code{"out$DIC"}}{ - Whether the Deviance Information Criterion (DIC) is calculated.}
+ \item{\code{"out$BUGSoutput$sims.list"}}{ - A list of the posterior distribution for each monitored parameter. Use sims.array and sims.matrix if a different format of the posteriors is desired.}
+ \item{\code{"out$SPP_NAME"}}{ - The name of the study species.}
+ \item{\code{"out$min_year"}}{ - First year of data included in the occupancy model run.}
+ \item{\code{"out$max_year"}}{ - Final year of data included in the occupancy model run or final year specified by the user.}
+ \item{\code{"out$nsite"}}{ - The number of unique sites included in the occupancy model run.}
+ \item{\code{"out$nvisits"}}{ - The number of unique visits included int he occupancy model run.}
+ \item{\code{"out$species_sites"}}{ - The number of unique sites the species of interest was recorded in.}
+ \item{\code{"out$species_observations"}}{ - The number of unique records for the species of interest.}
+ \item{\code{"out$regions"}}{ - The names of the regions included in the model run.}
+ \item{\code{"out$region_aggs"}}{ - The names of the region aggregates included in the model run.}
+ \item{\code{"out$nsites_region"}}{ - Named vector containing the number of sites in each region included in the occupancy model run.}
+}
 }
 \description{
 Run occupancy detection models using the output from \code{formatOccData}
@@ -93,7 +122,7 @@ A. Prior type: this has 3 options, each of which was tested in Outhwaite et al (
 
 B. Hyperprior type: This has 3 options, each of these are discussed in Outhwaite et al (in review):
   1. halfuniform - the original formulation in Isaac et al (2014).
-  2. halfcauchy - preferred form, tested in Outhwaite et al (in review).
+  2. halfcauchy - preferred form, tested in Outhwaite et al (2018).
   3. inversegamma - alternative form presented in the literature.
 
 C. List length specification:  This has 3 options:
@@ -117,14 +146,16 @@ combination is not a good idea. Here are the model elements available:
  \item{\code{"catlistlength"}}{ - This specifies that list length should be considered as a catagorical variable. There are 3 classes, lists of length 1, 2-3, and 4 and over. If none of the list length options are specifed 'contlistlength' is used}
  \item{\code{"contlistlength"}}{ - This specifies that list length should be considered as a continious variable. If none of the list length options are specifed 'contlistlength' is used}
  \item{\code{"nolistlength"}}{ - This specifies that no list length should be used. If none of the list length options are specifed 'contlistlength' is used}
- \item{\code{"jul_date"}}{ - This adds Julian date to the model as a polynomial centered on the middle of the year.}
- \item{\code{"intercept"}}{ - No longer available.  Includes an intercept term in the state and observation model.  By including intercept terms, the occupancy and detection probabilities in each year are centred on an overall mean level.}
- \item{\code{"centering"}}{ - No longer available.  Includes hierarchical centering of the model parameters.   Centring does not change the model explicitly but writes it in a way that allows parameter estimates to be updated simultaneously.}
+ \item{\code{"jul_date"}}{ - This adds Julian date to the model as a normal distribution with its mean and standard deviation as monitered parameters.}
+ \item{\code{"intercept"}}{ - No longer available. Includes an intercept term in the state and observation model.  By including intercept terms, the occupancy and detection probabilities in each year are centred on an overall mean level.}
+ \item{\code{"centering"}}{ - No longer available. Includes hierarchical centering of the model parameters.   Centring does not change the model explicitly but writes it in a way that allows parameter estimates to be updated simultaneously.}
 }
 These options are provided as a vector of characters, e.g. \code{modeltype = c('indran', 'halfcauchy', 'catlistlength')}
 }
 \examples{
 \dontrun{
+
+set.seed(123)
 
 # Create data
 n <- 15000 #size of dataset
@@ -145,10 +176,10 @@ taxa <- sample(letters, size = n, TRUE)
 site <- sample(paste('A', 1:nSites, sep=''), size = n, TRUE)
 
 # the date of visit is selected at random from those created earlier
-time_period <- sample(rDates, size = n, TRUE)
+survey <- sample(rDates, size = n, TRUE)
 
 # Format the data
-visitData <- formatOccData(taxa = taxa, site = site, time_period = time_period)
+visitData <- formatOccData(taxa = taxa, site = site, survey = survey)
 
 # run the model with these data for one species (very small number of iterations)
 results <- occDetFunc(taxa_name = taxa[1],
@@ -162,7 +193,11 @@ results <- occDetFunc(taxa_name = taxa[1],
 \references{
 Isaac, N.J.B., van Strien, A.J., August, T.A., de Zeeuw, M.P. and Roy, D.B. (2014).
             Statistics for citizen science: extracting signals of change from noisy ecological data.
-            Methods in Ecology and Evolution, 5 (10), 1052-1060.
+            \emph{Methods in Ecology and Evolution}, 5: 1052-1060.
+
+Outhwaite, C.L., Chandler, R.E., Powney, G.D., Collen, B., Gregory, R.D. & Isaac, N.J.B. (2018).
+            Prior specification in Bayesian occupancy modelling improves analysis of species occurrence data. 
+            \emph{Ecological Indicators}, 93: 333-343.
 }
 \keyword{bayesian,}
 \keyword{distribution,}
